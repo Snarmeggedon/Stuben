@@ -1,0 +1,95 @@
+{
+  "created_at": "2026-09-21T17:03:16.054157",
+  "version": "1.0",
+  "count": 40,
+  "domains": {
+    "phishing_domains": [
+      {
+        "domain": "secure-paypal-verify.com",
+        "category": "phishing",
+        "target": "PayPal",
+        "risk": "critical"
+      },
+      {
+        "domain": "bank-of-america-confirm.ru",
+        "category": "phishing",
+        "target": "Bank of America",
+        "risk": "critical"
+      },
+      {
+        "domain": "amazon-account-verify.co.uk",
+        "category": "phishing",
+        "target": "Amazon",
+        "risk": "critical"
+      }
+    ],
+    "malware_distribution": [
+      {
+        "domain": "trojan-downloads.cc",
+        "category": "malware_distribution",
+        "malware_family": "Multiple",
+        "risk": "critical"
+      },
+      {
+        "domain": "ransomware-samples.ru",
+        "category": "malware_distribution",
+        "malware_family": "Ransomware",
+        "risk": "critical"
+      },
+      {
+        "domain": "toolkit-builder.su",
+        "category": "malware_distribution",
+        "malware_family": "Hacking Tools",
+        "risk": "high"
+      }
+    ],
+    "exploit_kit_domains": [
+      {
+        "domain": "nuclear-ek.ru",
+        "category": "exploit_kit",
+        "kit_name": "Nuclear Exploit Kit",
+        "risk": "critical"
+      },
+      {
+        "domain": "rig-ek.cc",
+        "category": "exploit_kit",
+        "kit_name": "RIG Exploit Kit",
+        "risk": "critical"
+      },
+      {
+        "domain": "angler-ek.su",
+        "category": "exploit_kit",
+        "kit_name": "Angler Exploit Kit",
+        "risk": "critical"
+      }
+    ],
+    "botnet_c2_domains": [
+      {
+        "domain": "botmaster.ru",
+        "category": "botnet_c2",
+        "botnet": "Various",
+        "risk": "critical"
+      },
+      {
+        "domain": "command-server.net",
+        "category": "botnet_c2",
+        "botnet": "Multiple families",
+        "risk": "critical"
+      }
+    ],
+    "dynamically_generated": [
+      {
+        "pattern": "*.xyz",
+        "category": "dga_tld",
+        "reason": "High abuse rate",
+        "risk": "high"
+      },
+      {
+        "pattern": "*.tk",
+        "category": "dga_tld",
+        "reason": "High abuse rate",
+        "risk": "high"
+      }
+    ]
+  }
+}

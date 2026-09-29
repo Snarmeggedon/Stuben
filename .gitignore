@@ -1,0 +1,25 @@
+# Python runtime artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Local credentials and environment settings
+.env
+.env.*
+gmail_credentials.json
+gmail_token.json
+client_secret*.json
+*.apps.googleusercontent.com.json
+
+# Local runtime data and generated reports
+action_history.json
+analytics_report.json
+action_report.json
+quarantine/
+*.log
+
+# Build artifacts
+build/
+dist/

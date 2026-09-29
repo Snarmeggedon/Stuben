@@ -1,0 +1,130 @@
+{
+  "created_at": "2026-09-21T17:03:16.053667",
+  "version": "1.0",
+  "count": 30,
+  "known_c2_servers": {
+    "emotet_c2": {
+      "type": "C2 Server",
+      "malware_family": "Emotet",
+      "ips": [
+        "103.145.45.38",
+        "192.241.238.152",
+        "45.153.243.26",
+        "103.145.45.42"
+      ],
+      "domains": [
+        "mirtovvn.ru",
+        "bankin.top",
+        "akil.ru"
+      ],
+      "ports": [
+        8080,
+        443,
+        8081
+      ],
+      "protocols": [
+        "HTTP",
+        "HTTPS",
+        "SMB"
+      ],
+      "indicators": "SSL certificates, HTTP User-Agent spoofing"
+    },
+    "trickbot_c2": {
+      "type": "C2 Server",
+      "malware_family": "TrickBot",
+      "ips": [
+        "45.142.212.154",
+        "195.154.33.217",
+        "46.4.107.45"
+      ],
+      "domains": [
+        "track.trickbotdomain.ru",
+        "c2.trickbot.eu"
+      ],
+      "ports": [
+        443,
+        8080
+      ],
+      "protocols": [
+        "HTTPS"
+      ],
+      "indicators": "Specific SSL certificate patterns, JSON-RPC commands"
+    },
+    "dridex_c2": {
+      "type": "C2 Server",
+      "malware_family": "Dridex",
+      "ips": [
+        "41.76.44.210",
+        "197.242.150.244",
+        "105.184.48.183"
+      ],
+      "domains": [],
+      "ports": [
+        80,
+        443,
+        8080
+      ],
+      "protocols": [
+        "HTTP",
+        "HTTPS"
+      ],
+      "indicators": "Fast-flux DNS, bulletproof hosting providers"
+    },
+    "mirai_c2": {
+      "type": "Botnet C2",
+      "malware_family": "Mirai",
+      "ips": [
+        "162.125.18.133",
+        "162.142.125.228",
+        "192.241.206.103"
+      ],
+      "domains": [
+        "mirai.tracker.ru",
+        "botnet.cc"
+      ],
+      "ports": [
+        23,
+        22,
+        2323,
+        5555
+      ],
+      "protocols": [
+        "SSH",
+        "Telnet"
+      ],
+      "indicators": "Default credential exploitation, weak SSH keys"
+    },
+    "conficker_p2p": {
+      "type": "P2P Botnet",
+      "malware_family": "Conficker",
+      "ips": [
+        "Random scanning range 10.0.0.0/8"
+      ],
+      "domains": [],
+      "ports": [
+        445,
+        139
+      ],
+      "protocols": [
+        "SMB"
+      ],
+      "indicators": "Decentralized P2P architecture, Windows SYSTEM32 folder scanning"
+    },
+    "zeroaccess_p2p": {
+      "type": "P2P Botnet",
+      "malware_family": "ZeroAccess",
+      "ips": [
+        "Various ISPs with weak security"
+      ],
+      "domains": [],
+      "ports": [
+        6112,
+        6113
+      ],
+      "protocols": [
+        "Custom P2P"
+      ],
+      "indicators": "Kernel-mode rootkit, encrypted P2P traffic"
+    }
+  }
+}
