@@ -573,29 +573,8 @@ class SecurityDashboard:
                 divider.pack(fill='x', padx=8, pady=8)
     
     def _execute_action(self, action, pattern):
-        """Execute a recommended action."""
-        print(f"[ACTION] Executing: {action} for pattern: {pattern}")
-        
-        # Log the action
-        self.action_history.log_action(action, pattern)
-        
-        # Map actions to actual functions
-        action_lower = action.lower()
-        
-        if "quarantine" in action_lower or "isolate" in action_lower:
-            self.queue_scan("isolate_threat")
-        elif "remove" in action_lower or "delete" in action_lower:
-            self.queue_scan("remove_threat")
-        elif "sandbox" in action_lower or "analyze" in action_lower:
-            self.queue_scan("analyze_threat")
-        elif "scan" in action_lower:
-            self.queue_scan("deep_scan")
-        elif "update" in action_lower or "patch" in action_lower:
-            print("[INFO] Update action recommended - consult system updates")
-        elif "review" in action_lower or "manual" in action_lower:
-            print("[INFO] Manual review recommended")
-        else:
-            print(f"[INFO] Action: {action}")
+        """Route recommendation buttons through the common threat action handler."""
+        self.execute_threat_action(action, pattern)
 
     def execute_threat_action(self, action, pattern):
         """Execute a recommended action for a specific threat."""
@@ -622,7 +601,7 @@ class SecurityDashboard:
         self.write_output('ACTION', f'[{pattern.upper()}] Executing: {action}')
         
         # Execute threat-specific actions
-        if 'quarantine' in text or 'isolate' in text:
+        if 'quarantine' in text or ('isolate' in text and 'system' not in text):
             if self.last_review_path and Path(self.last_review_path).exists():
                 source = Path(self.last_review_path)
                 target = self.quarantine_dir / f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{source.name}"

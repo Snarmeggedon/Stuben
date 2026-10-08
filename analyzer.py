@@ -70,6 +70,12 @@ class CodeAnalyzer:
         re.compile(r'\b(?:safe|benign|legitimate|trusted|approved|allowlist|whitelist)\b', re.I),
     )
     
+    STRONG_INDICATORS = re.compile(
+        r'(?:-enc(?:odedcommand)?\b|invoke-expression|\biex\b|downloadstring|downloadfile'
+        r'|https?://\d{1,3}(?:\.\d{1,3}){3}|frombase64string|certutil\s+-urlcache)',
+        re.I,
+    )
+
     def __init__(self):
         # Pre-compile all regex patterns at startup for maximum speed
         self._compiled_patterns = []
@@ -173,14 +179,11 @@ class CodeAnalyzer:
         if not stripped:
             return True
 
-        lower = stripped.lower()
+        # Strong indicators are never suppressed, even next to words like "test"
+        if self.STRONG_INDICATORS.search(stripped):
+            return False
+
         if any(pattern.search(stripped) for pattern in self.LEGITIMATE_CONTEXT_PATTERNS):
             return True
 
-        if stripped.startswith(("http://", "https://")):
-            return True
-
-        if any(token in lower for token in ("https://", "http://", "www.")) and "download and execute" not in lower:
-            return True
-
-        return False
+        return stripped.lower().startswith(("http://", "https://"))

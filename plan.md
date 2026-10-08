@@ -328,6 +328,7 @@ The session automation is configured to:
 - `.session_automation` - Daily wake-up schedule (17:00 UTC)
 - `daily_patch_generator.py` - Patch generation script
 - `action_history.json` - Persistent action log
+- Recommendation buttons dispatch through the shared threat-action handler and audit logger
 - `plan.md` - THIS FILE (auto-updated daily)
 
 ---

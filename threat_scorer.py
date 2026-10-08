@@ -1,3 +1,4 @@
+import re
 """
 Enhanced threat scoring with CVSS-like methodology.
 Considers impact, exploitability, and attack complexity.
@@ -93,11 +94,15 @@ class EnhancedThreatScorer:
 
     @staticmethod
     def _is_likely_contextual_false_positive(finding):
+        from analyzer import CodeAnalyzer
+        line = " ".join(str(finding.get(k, "")) for k in ("malicious_line", "match"))
+        if CodeAnalyzer.STRONG_INDICATORS.search(line):
+            return False
         text = " ".join(
             str(finding.get(key, "")).lower()
             for key in ("pattern_name", "malicious_line", "match", "file")
         )
-        return any(token in text for token in ("example", "sample", "documentation", "readme", "tutorial", "test", "benign", "safe"))
+        return bool(re.search(r"\b(?:example|sample|documentation|readme|tutorial|tests?|benign|safe)\b", text))
     
     def get_attack_profile(self, findings):
         """Determine attack profile based on detected patterns."""

