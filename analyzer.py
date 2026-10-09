@@ -24,14 +24,14 @@ class CodeAnalyzer:
         ("domain request", "network", "high", r"https?://[A-Za-z0-9][A-Za-z0-9.-]*\.[a-z]{2,}"),
         ("socket connection", "network", "high", r"socket\.|requests\.|urllib\.|Invoke-WebRequest"),
         ("dns resolution", "network", "medium", r"gethostbyname|getaddrinfo|nslookup|Resolve-DnsName"),
-        ("c2 communication", "network", "critical", r"beacon|c2|command.?and.?control|remote.?access"),
+        ("c2 communication", "network", "critical", r"beacon|\bc2\b|command.?and.?control|remote.?access"),
 
         # Credential Theft (credential)
         ("browser credential theft", "credential", "critical", r"browser\.|credential|password|passwd"),
         ("secrets access", "credential", "critical", r"secrets|token|api.?key|apikey|secret.?key"),
         ("keylogging", "credential", "critical", r"keylogger|key.?log|GetAsyncKeyState|SetWindowsHookEx"),
         ("credential dumping tools", "credential", "critical", r"Get-Credential|Mimikatz|rundll32|regsvr32"),
-        ("windows credential extraction", "credential", "critical", r"SAM|HKLM\\Security|credential manager|LSA"),
+        ("windows credential extraction", "credential", "critical", r"\bSAM\b|HKLM\\Security|credential manager|\bLSA\b"),
 
         # Persistence (persistence)
         ("registry persistence", "persistence", "high", r"RunOnce|HKCU.*Run|HKLM.*Run|CurrentVersion.*Run"),

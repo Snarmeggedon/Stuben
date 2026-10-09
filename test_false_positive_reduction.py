@@ -63,3 +63,15 @@ class ScorerHardeningTests(unittest.TestCase):
         g = {"pattern_name": "x", "malicious_line": "latest build", "file": "a.py"}
         self.assertFalse(EnhancedThreatScorer._is_likely_contextual_false_positive(g))
 
+
+class PatternBoundaryTests(unittest.TestCase):
+    def test_short_tokens_need_word_boundaries(self):
+        from analyzer import CodeAnalyzer
+        a = CodeAnalyzer()
+        noisy = a.analyze_content("color: #0c2d6b; sample_data = 1", "x.py")
+        names = {f["pattern_name"] for f in noisy}
+        self.assertNotIn("c2 communication", names)
+        self.assertNotIn("windows credential extraction", names)
+        real = {f["pattern_name"] for f in a.analyze_content("connect to c2 server; dump SAM hive", "x.py")}
+        self.assertIn("c2 communication", real)
+        self.assertIn("windows credential extraction", real)
