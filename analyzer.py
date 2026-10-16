@@ -124,7 +124,9 @@ class CodeAnalyzer:
             return self._build_read_error(path)
         return self.analyze_content(content, str(path))
 
-    def analyze_directory(self, directory, recursive=True):
+    def analyze_directory(self, directory, recursive=True, exclude_names=()):
+        """Scan a directory; exclude_names (opt-in) skips files/dirs by exact name."""
+        excluded = {name.lower() for name in exclude_names}
         path = Path(directory)
         if not path.exists():
             return self._build_missing_result(path, 'directory')
@@ -141,8 +143,10 @@ class CodeAnalyzer:
         
         for item in items:
             try:
+                if item.name.lower() in excluded:
+                    continue
                 if item.is_dir() and recursive:
-                    findings.extend(self.analyze_directory(item, recursive=True))
+                    findings.extend(self.analyze_directory(item, recursive=True, exclude_names=exclude_names))
                 elif item.is_file() and item.suffix.lower() in self.SCANNABLE_SUFFIXES:
                     findings.extend(self.analyze_file(str(item)))
             except PermissionError:

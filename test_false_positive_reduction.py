@@ -75,3 +75,14 @@ class PatternBoundaryTests(unittest.TestCase):
         real = {f["pattern_name"] for f in a.analyze_content("connect to c2 server; dump SAM hive", "x.py")}
         self.assertIn("c2 communication", real)
         self.assertIn("windows credential extraction", real)
+
+class ExcludeNamesTests(unittest.TestCase):
+    def test_exclude_names_is_opt_in(self):
+        import tempfile
+        from pathlib import Path
+        from analyzer import CodeAnalyzer
+        with tempfile.TemporaryDirectory() as d:
+            Path(d, "evil.ps1").write_text("powershell -enc AAAA\n")
+            a = CodeAnalyzer()
+            self.assertTrue(a.analyze_directory(d))
+            self.assertFalse(a.analyze_directory(d, exclude_names=("evil.ps1",)))
