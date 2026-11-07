@@ -23,3 +23,4 @@ quarantine/
 # Build artifacts
 build/
 dist/
+digests/
