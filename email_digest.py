@@ -1,4 +1,5 @@
 """Daily email digest: summarizes only mail vetted as safe."""
+import html
 import re
 from datetime import datetime
 from pathlib import Path
@@ -46,7 +47,9 @@ def _line(msg):
     name, addr = parseaddr(msg.get('from', ''))
     who = (name or addr or 'Unknown').replace('|', '/')
     subject = (msg.get('subject') or '(no subject)').replace('\n', ' ')
-    snippet = (msg.get('snippet') or '').strip().replace('\n', ' ')
+    snippet = html.unescape(msg.get('snippet') or '')
+    snippet = re.sub(r'[\u200b-\u200f\u034f\u2060\ufeff\u00ad\u202f\xa0\s]+', ' ', snippet).strip()
+    subject = html.unescape(subject)
     if len(snippet) > 140:
         snippet = snippet[:137] + '...'
     out = f'- **{subject}** - {who}'
