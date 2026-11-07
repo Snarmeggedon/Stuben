@@ -64,14 +64,15 @@ class DigestTests(unittest.TestCase):
 
     def test_markdown_excludes_filtered_content(self):
         text = render_markdown(build_digest(self.msgs, datetime(2026, 1, 1, 8)))
-        self.assertIn('Job Updates', text)
+        self.assertIn('Job Application Updates', text)
         self.assertNotIn('Verify your account', text)
         self.assertNotIn('Flash sale', text)
 
     def test_write_digest(self):
         with tempfile.TemporaryDirectory() as tmp:
-            path, _ = write_digest(self.msgs, Path(tmp) / 'd.md')
+            path, _ = write_digest(self.msgs, Path(tmp) / 'd.md', quarantine_dir=Path(tmp) / 'q')
             self.assertTrue(path.exists())
+            self.assertEqual(len(list((Path(tmp) / 'q').glob('*.json'))), 1)
 
 
 if __name__ == '__main__':

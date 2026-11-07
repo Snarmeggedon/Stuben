@@ -1,5 +1,6 @@
 """Daily email digest: summarizes only mail vetted as safe."""
 import html
+import json
 import re
 from datetime import datetime
 from pathlib import Path
@@ -31,16 +32,43 @@ def categorize(message):
     return 'fyi'
 
 
+STATUS_KEYWORDS = (
+    'thank you for applying', 'thanks for applying', 'application has been received', 'received your application',
+    'application for', 'your application', 'interview', 'offer', 'next steps', 'assessment', 'not moving forward',
+    'unfortunately', 'regret', 'schedule a call', 'recruiter', 'background check', 'we would like to',
+)
+ALERT_SENDERS = ('jobalert', 'job alert', 'jobright', 'apt job', 'talenthop', 'ziprecruiter')
+
+
+def is_job_status(message):
+    text = f"{message.get('subject', '')} {message.get('snippet', '')}".lower()
+    sender = message.get('from', '').lower()
+    if 'jobs similar' in text or 'new jobs' in text or 'is hiring' in text or any(a in sender for a in ALERT_SENDERS):
+        return False
+    return any(k in text for k in STATUS_KEYWORDS)
+
+
 def build_digest(messages, now=None):
     now = now or datetime.now()
     vetted = vet_messages(messages)
-    groups = {'job': [], 'important': [], 'fyi': []}
+    groups = {'job': [], 'job_alerts': [], 'important': [], 'fyi': []}
     counts = {SAFE: 0, SUSPICIOUS: 0, JUNK: 0}
+    quarantined = []
     for msg, verdict in vetted:
         counts[verdict['verdict']] += 1
         if verdict['verdict'] == SAFE:
-            groups[categorize(msg)].append(msg)
-    return {'generated': now, 'total': len(messages), 'counts': counts, 'groups': groups}
+            cat = categorize(msg)
+            if cat == 'job' and not is_job_status(msg):
+                cat = 'job_alerts'
+            groups[cat].append(msg)
+        else:
+            quarantined.append({
+                'id': msg.get('id'), 'verdict': verdict['verdict'], 'score': verdict['score'],
+                'from': msg.get('from', ''), 'subject': msg.get('subject', ''),
+                'date': msg.get('date', ''), 'reasons': verdict['reasons'],
+            })
+    return {'generated': now, 'total': len(messages), 'counts': counts, 'groups': groups,
+            'quarantined': quarantined}
 
 
 def _line(msg):
@@ -67,23 +95,35 @@ def render_markdown(digest):
         f"{c[SUSPICIOUS]} suspicious, {c[JUNK]} junk.",
         '',
     ]
-    for key, title in (('job', 'Job Updates'), ('important', 'Important / Time-Sensitive'), ('fyi', 'FYI')):
+    for key, title in (('job', 'Job Application Updates'), ('important', 'Important / Time-Sensitive'),
+                       ('job_alerts', 'Job Alerts & New Listings'), ('fyi', 'FYI')):
         lines.append(f'## {title} ({len(g[key])})')
         lines.extend([_line(m) for m in g[key]] or ['_Nothing new._'])
         lines.append('')
     lines += [
-        '## Filtered',
+        '## Quarantined',
         f"- {c[JUNK]} junk item(s) and {c[SUSPICIOUS]} suspicious item(s) were filtered out "
-        'and their bodies were never opened.',
+        'and their bodies were never opened. Details are in the quarantine report.',
         '',
     ]
     return '\n'.join(lines)
 
 
-def write_digest(messages, output_path=None, now=None):
+def write_quarantine(digest, directory=None):
+    """Local quarantine report (Gmail access is read-only, so mail itself is not moved)."""
+    directory = Path(directory) if directory else Path(__file__).resolve().parent / 'quarantine'
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"email_quarantine_{digest['generated'].strftime('%Y-%m-%d')}.json"
+    path.write_text(json.dumps(digest['quarantined'], indent=2), encoding='utf-8')
+    return path
+
+
+def write_digest(messages, output_path=None, now=None, quarantine_dir=None):
     digest = build_digest(messages, now)
     path = Path(output_path) if output_path else Path(__file__).resolve().parent / 'digests' / \
         f"email_digest_{digest['generated'].strftime('%Y-%m-%d')}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(render_markdown(digest), encoding='utf-8')
+    if quarantine_dir is not None or output_path is None:
+        write_quarantine(digest, quarantine_dir)
     return path, digest
