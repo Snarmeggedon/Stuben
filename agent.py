@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import io
+import os
 import sys
 
 from desktop_app import launch_app
@@ -73,6 +74,8 @@ def main():
         path, digest = write_digest(result['messages'], output)
         c = digest['counts']
         print(f"Digest written: {path} ({c['safe']} safe, {c['suspicious']} suspicious, {c['junk']} junk)")
+        if '--open' in rest and hasattr(os, 'startfile'):
+            os.startfile(str(path))
         return 0
 
     print('Unknown command. Use: python agent.py desktop')
