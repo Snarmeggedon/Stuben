@@ -49,3 +49,5 @@ py agent.py email-digest [--query "in:inbox newer_than:1d"] [--limit 100] [--out
 ```
 
 Output defaults to `digests\email_digest_YYYY-MM-DD.md`. Tests: `py -m unittest test_email_digest.py`.
+## Appointments & reminders
+The digest scans safe mail (subject/snippet only) for appointments, interviews and similar. Upcoming ones are remembered in appointments.json (gitignored) and listed under 'Appointments & Reminders'. When a date is found, an .ics file with alerts 1 day and 1 hour before is written next to the digest; import it into your calendar. New items are flagged so the daily briefing can ask if you want a reminder.

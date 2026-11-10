@@ -7,6 +7,7 @@ from pathlib import Path
 
 from email.utils import parseaddr
 
+from appointments import build_ics, detect_appointment, merge_store
 from email_vetting import SAFE, SUSPICIOUS, JUNK, vet_messages
 
 JOB_KEYWORDS = (
@@ -54,9 +55,13 @@ def build_digest(messages, now=None):
     groups = {'job': [], 'job_alerts': [], 'important': [], 'fyi': []}
     counts = {SAFE: 0, SUSPICIOUS: 0, JUNK: 0}
     quarantined = []
+    appointments = []
     for msg, verdict in vetted:
         counts[verdict['verdict']] += 1
         if verdict['verdict'] == SAFE:
+            appt = detect_appointment(msg, now.date())
+            if appt:
+                appointments.append(appt)
             cat = categorize(msg)
             if cat == 'job' and not is_job_status(msg):
                 cat = 'job_alerts'
@@ -68,7 +73,7 @@ def build_digest(messages, now=None):
                 'date': msg.get('date', ''), 'reasons': verdict['reasons'],
             })
     return {'generated': now, 'total': len(messages), 'counts': counts, 'groups': groups,
-            'quarantined': quarantined}
+            'quarantined': quarantined, 'appointments': appointments, 'new_appointments': appointments}
 
 
 def _line(msg):
@@ -86,6 +91,15 @@ def _line(msg):
     return out
 
 
+def _appt_line(appt, is_new):
+    when = appt['date'] or 'date unknown'
+    if appt.get('time'):
+        when += f" at {datetime.strptime(appt['time'], '%H:%M').strftime('%I:%M %p').lstrip('0')}"
+    tag = ' **(new - want a reminder?)**' if is_new else ''
+    note = f" - {appt['note']}" if appt.get('note') else ''
+    return f"- **{appt['title']}** - {when}{note}{tag}"
+
+
 def render_markdown(digest):
     d, g, c = digest['generated'], digest['groups'], digest['counts']
     lines = [
@@ -95,6 +109,16 @@ def render_markdown(digest):
         f"{c[SUSPICIOUS]} suspicious, {c[JUNK]} junk.",
         '',
     ]
+    appts = digest.get('appointments') or []
+    new_keys = {a['id'] for a in digest.get('new_appointments') or []}
+    lines.append(f'## Appointments & Reminders ({len(appts)})')
+    if appts:
+        lines.extend(_appt_line(a, a.get('id') in new_keys) for a in appts)
+        lines.append('_Reminder requests: tell me which to set, or import the .ics file next to this digest '
+                     '(it adds alerts 1 day and 1 hour before)._')
+    else:
+        lines.append('_No appointments found._')
+    lines.append('')
     for key, title in (('job', 'Job Application Updates'), ('important', 'Important / Time-Sensitive'),
                        ('job_alerts', 'Job Alerts & New Listings'), ('fyi', 'FYI')):
         lines.append(f'## {title} ({len(g[key])})')
@@ -118,12 +142,22 @@ def write_quarantine(digest, directory=None):
     return path
 
 
-def write_digest(messages, output_path=None, now=None, quarantine_dir=None):
+def write_digest(messages, output_path=None, now=None, quarantine_dir=None, appointments_store=None):
     digest = build_digest(messages, now)
-    path = Path(output_path) if output_path else Path(__file__).resolve().parent / 'digests' / \
+    base = Path(__file__).resolve().parent
+    path = Path(output_path) if output_path else base / 'digests' / \
         f"email_digest_{digest['generated'].strftime('%Y-%m-%d')}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
+    store = appointments_store if appointments_store is not None else (
+        base / 'appointments.json' if output_path is None else path.with_name('appointments.json'))
+    upcoming, new_keys = merge_store(store, digest['appointments'], digest['generated'].date())
+    undated = [a for a in digest['appointments'] if not a.get('date')]
+    digest['new_appointments'] = [a for a in digest['appointments'] if a.get('date') and
+                                  f"{a['title'].lower()}|{a['date']}|{a['time']}" in new_keys] + undated
+    digest['appointments'] = upcoming + undated
     path.write_text(render_markdown(digest), encoding='utf-8')
+    if upcoming:
+        path.with_suffix('.ics').write_text(build_ics(upcoming, digest['generated']), encoding='utf-8')
     if quarantine_dir is not None or output_path is None:
         write_quarantine(digest, quarantine_dir)
     return path, digest
