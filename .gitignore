@@ -23,3 +23,5 @@ quarantine/
 # Build artifacts
 build/
 dist/
+digests/
+appointments.json

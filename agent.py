@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import io
+import os
 import sys
 
 from desktop_app import launch_app
@@ -20,7 +21,7 @@ def main():
 
     command = args[0].lower()
     if command == 'help':
-        print('HELP\nshow desktop app: python agent.py desktop\nscan > python agent.py scan <path>\nquick review: python agent.py r <file>')
+        print('HELP\nshow desktop app: python agent.py desktop\nscan > python agent.py scan <path>\nquick review: python agent.py r <file>\nemail setup (once): python agent.py gmail-auth\nemail digest: python agent.py email-digest [--query Q] [--limit N] [--output FILE]')
         return 0
 
     if command == 'scan':
@@ -41,6 +42,40 @@ def main():
         target = args[1] if len(args) > 1 else '.'
         findings = CodeAnalyzer().analyze_file(target)
         print(ReportGenerator().generate(findings, 'text'))
+        return 0
+
+    if command == 'gmail-auth':
+        from gmail_integration import GmailIntegration
+
+        GmailIntegration().authenticate(interactive=True)
+        print('Gmail authorized (read-only). Token saved to gmail_token.json')
+        return 0
+
+    if command == 'email-digest':
+        from email_digest import write_digest
+        from gmail_integration import GmailIntegration
+
+        query = 'in:inbox newer_than:1d'
+        output = None
+        limit = 100
+        rest = args[1:]
+        for i, a in enumerate(rest):
+            if a == '--query' and i + 1 < len(rest):
+                query = rest[i + 1]
+            elif a == '--output' and i + 1 < len(rest):
+                output = rest[i + 1]
+            elif a == '--limit' and i + 1 < len(rest):
+                limit = int(rest[i + 1])
+        try:
+            result = GmailIntegration().scan_messages(query=query, limit=limit)
+        except RuntimeError as exc:
+            print(f'ERROR: {exc}')
+            return 2
+        path, digest = write_digest(result['messages'], output)
+        c = digest['counts']
+        print(f"Digest written: {path} ({c['safe']} safe, {c['suspicious']} suspicious, {c['junk']} junk)")
+        if '--open' in rest and hasattr(os, 'startfile'):
+            os.startfile(str(path))
         return 0
 
     print('Unknown command. Use: python agent.py desktop')
