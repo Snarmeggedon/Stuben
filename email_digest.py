@@ -157,7 +157,8 @@ def write_digest(messages, output_path=None, now=None, quarantine_dir=None, appo
     digest['appointments'] = upcoming + undated
     path.write_text(render_markdown(digest), encoding='utf-8')
     if upcoming:
-        path.with_suffix('.ics').write_text(build_ics(upcoming, digest['generated']), encoding='utf-8')
+        with path.with_suffix('.ics').open('w', encoding='utf-8', newline='') as fh:
+            fh.write(build_ics(upcoming, digest['generated']))
     if quarantine_dir is not None or output_path is None:
         write_quarantine(digest, quarantine_dir)
     return path, digest

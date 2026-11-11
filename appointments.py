@@ -19,6 +19,7 @@ MONTH_RE = re.compile(
 NUM_RE = re.compile(r'\b(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?\b')
 REL_RE = re.compile(r'\b(today|tomorrow)\b', re.I)
 TIME_RE = re.compile(r'\b(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m\b\.?', re.I)
+TIME24_RE = re.compile(r'\b([01]?\d|2[0-3]):([0-5]\d)\b')
 
 
 def _clean(text):
@@ -56,6 +57,9 @@ def _find_date(text, today):
 def _find_time(text):
     m = TIME_RE.search(text)
     if not m:
+        m24 = TIME24_RE.search(text)
+        if m24 and int(m24.group(1)) < 24 and int(m24.group(2)) < 60:
+            return time(int(m24.group(1)), int(m24.group(2)))
         return None
     hour, minute = int(m.group(1)), int(m.group(2) or 0)
     if not (1 <= hour <= 12 and minute < 60):
@@ -101,6 +105,10 @@ def merge_store(path, detected, today=None):
     """Merge newly detected dated appointments into the store; drop past ones. Returns (upcoming, new_keys)."""
     today = today or date.today()
     stored = [a for a in load_store(path) if a.get('date') and a['date'] >= today.isoformat()]
+    detected_ids = {a['id'] for a in detected if a.get('date') and a.get('id')}
+    current_keys = {appointment_key(a) for a in detected if a.get('date')}
+    stored = [a for a in stored
+              if not (a.get('id') in detected_ids and appointment_key(a) not in current_keys)]
     known = {appointment_key(a) for a in stored}
     new_keys = set()
     for appt in detected:

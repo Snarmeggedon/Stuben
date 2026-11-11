@@ -84,6 +84,10 @@ class AppointmentTests(unittest.TestCase):
         a = detect_appointment(m, self.TODAY)
         self.assertEqual((a['date'], a['time']), ('2026-11-12', '15:30'))
 
+    def test_24h_time(self):
+        a = detect_appointment(msg('va@va.gov', 'Your VA Video Connect Visit on 11/18/2026 07:30 EST', 'Appointment in one week'), self.TODAY)
+        self.assertEqual((a['date'], a['time']), ('2026-11-18', '07:30'))
+
     def test_past_and_undated_are_ignored(self):
         self.assertIsNone(detect_appointment(msg('a@b.com', 'Appointment recap', 'was on Nov 1'), self.TODAY))
         self.assertIsNone(detect_appointment(msg('a@b.com', 'Newsletter', 'weekly deals'), self.TODAY))
